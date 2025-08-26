@@ -363,7 +363,7 @@ export default function PersonalHomepage() {
                     <div className="font-semibold">{e.school}</div>
                     <div className="text-sm">• {e.degree}</div>
                     <div className="text-sm text-gray-500">{e.time}</div>
-                    {e.advisor && <div className="text-sm text-gray-600">Mentor/Topic: {e.advisor}</div>}
+                    {e.advisor && <div className="text-sm text-gray-600">Topic: {e.advisor}</div>}
                   </div>
                 ))}
               </div>
