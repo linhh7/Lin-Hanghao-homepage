@@ -76,7 +76,7 @@ const DATA = {
       summary:
         "Catalyst design, reaction engineering, and polymer characterization.",
       files: [
-        { label: "Overview (PDF)", href: "/uploads/Research experiment/Direct synthesis of polycarbonate diols with tunable molecular weights from atmospheric flow CO₂ and diols/html/index.html" },
+        { label: "Overview (PDF)", href: "/uploads/Research experiment/Metal/html/index.html" },
         // { label: "Results (PPTX)", href: "" },
         // { label: "Data (XLSX/CSV)", href: "" },
       ],
@@ -88,7 +88,7 @@ const DATA = {
       period: "2023 – 2025",
       summary: "Solvent effects and basicity tuning on CeO₂ (Ba/Sr/Mg/Ca).",
       files: [
-        { label: " Overview(PDF)", href: "/uploads/Research experiment/Direct synthesis of polycarbonate diols with tunable molecular weights from atmospheric flow CO₂ and diols/html/index.html" },
+        { label: " Overview(PDF)", href: "/uploads/Research experiment/Slovent/html/index.html" },
         // { label: "Kinetics (PPTX)", href: "" },
         // { label: "NMR / GPC data", href: "" },
       ],
