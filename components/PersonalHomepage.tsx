@@ -418,7 +418,7 @@ export default function PersonalHomepage() {
         <section id="skills" className="mt-8">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl" style={{color: primary}}>🧰</span>
-            <h3 className="text-xl md:text-2xl font-semibold" style={{ color: "#222" }}>Research Skills (Click for detail)</h3>
+            <h3 className="text-xl md:text-2xl font-semibold" style={{ color: "#222" }}>Research Skills (Click below for detail)</h3>
           </div>
           <div className="grid grid-cols-2 gap-1">
             {DATA.researchSkills.map((s: any, i: number) => (
