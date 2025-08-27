@@ -5,9 +5,10 @@ import { useState } from 'react';
 
 export default function UnlockPage() {
   const sp = useSearchParams();
-  const next = sp.get('next') || '/';
-  const error = sp.get('error');
+  const next = sp?.get('next') ?? '/';
+  const error = sp?.get('error') ?? null;
   const [pwd, setPwd] = useState('');
+
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
