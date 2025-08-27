@@ -57,7 +57,7 @@ const DATA = {
           "M.Sc. in Science & Engineering for Materials, Chemistry & Bioengineering",
         time: "Apr. 2023 – Mar. 2025",
         advisor:
-          "Research: CO₂ + diol to PCDL over metal‑modified CeO₂ catalysts",
+          "Research: Direct synthesis of polycarbonate diols from flow CO₂ and1,6-hexanediol over alkaline earth metal oxide-modified CeO₂",
       },
       {
         school: "Zhejiang Gongshang University",
@@ -111,15 +111,15 @@ const DATA = {
       detail:
         "Impregnation, deposition–precipitation, hydrothermal; glovebox; air/moisture‑sensitive reactions; metal complex chemistry.",
       links: [
-        // { label: "方法总结（PPT）", href: "" },
+         { label: "Catalyst synthesis", href: "/uploads/Research skills/Catalyst  Material Synthesis/html/index.html" },
         // { label: "代表样品数据", href: "" },
       ],
     },
     {
-      name: "Catalyst Test",
+      name: "In situ spectroscopy",
       detail: "DRIFTS–MS; FTIR of CO₂/alcohol adsorption; SPring‑8 XAS.",
       links: [
-        // { label: "CO2+Diol", href: "" },
+        { label: "Transmission FTIR and situ plasma DRIFTS", href: "/uploads/Research skills/In situ/html/index.html" },
         // { label: "gas-phase oxidation", href: "" },
       ],
     },
@@ -128,7 +128,7 @@ const DATA = {
       detail:
         "",
       links: [
-        // { label: "FTIR", href: "" },
+        { label: "FTIR", href: "/uploads/Research skills/Charcterization techique/FTIR/html/index.html" },
         { label: "SEM and TEM", href: "/uploads/Research skills/Charcterization techique/SEM and TEM/html/index.html" },
         { label: "TPX", href: "/uploads/Research skills/Charcterization techique/TPX/html/index.html" },
         // { label: "XAS", href: "" },
@@ -139,8 +139,8 @@ const DATA = {
     {
       name: "Data Analysis & Automation",
       detail: "Python for visualization/kinetics; VBA batch processing.",
-      links: [ { label: "Kinetics", href: "/uploads/Research skills/Charcterization techique/Kinetics/html/index.html" }
-        // { label: "Python", href: "" },
+      links: [ { label: "Kinetics", href: "/uploads/Research skills/Charcterization techique/Kinetics/html/index.html" },
+         { label: "Python", href: "/uploads/Research skills/Charcterization techique/Python/html/index.html" },
         // { label: "VBA", href: "" },
       ],
     },
