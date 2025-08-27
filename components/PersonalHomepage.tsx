@@ -8,7 +8,7 @@ const DATA = {
     name: "Lin Hanghao",
     title: "Ph.D. Candidate | Catalysis & CO₂ Utilization",
     org: "Osaka Metropolitan University (OMU)",
-    email: "Email:sw23117l@st.omu.ac.jp",
+    email: "sw23117l@st.omu.ac.jp",
     linkedin: "https://www.linkedin.com/in/hanghao-lin-3711b2228",
     selfinterview:"https://www.omu.ac.jp/eng/intst/why_omu/voice01/",
     avatar: "/picture.jpg",
