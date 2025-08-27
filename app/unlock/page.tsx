@@ -1,14 +1,17 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-export default function UnlockPage() {
+// 让此页始终动态渲染，避免预渲染期取 searchParams 报错
+export const dynamic = 'force-dynamic';
+
+function UnlockForm() {
   const sp = useSearchParams();
   const next = sp?.get('next') ?? '/';
   const error = sp?.get('error') ?? null;
   const [pwd, setPwd] = useState('');
-
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
@@ -45,5 +48,13 @@ export default function UnlockPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function UnlockPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading…</div>}>
+      <UnlockForm />
+    </Suspense>
   );
 }
