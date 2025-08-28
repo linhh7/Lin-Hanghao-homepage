@@ -3,8 +3,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 const COOKIE_NAME = 'ov_unlocked';
 
-// 把秒数换成 Max-Age 的数字（这里 30天）
-const MAX_AGE = 60 * 60 * 24 * 30;
+// 把秒数换成 Max-Age 的数字（这里 半天）
+const MAX_AGE = 60 * 60 * 12;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
