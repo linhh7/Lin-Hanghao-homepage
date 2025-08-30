@@ -1,17 +1,26 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-// 让此页始终动态渲染，避免预渲染期取 searchParams 报错
+// 可选：强制动态，避免被预渲染
 export const dynamic = 'force-dynamic';
 
-function UnlockForm() {
-  const sp = useSearchParams();
-  const next = sp?.get('next') ?? '/';
-  const error = sp?.get('error') ?? null;
+export default function UnlockPage() {
+  // 初始给出稳定的默认值，保证 SSR 与首帧一致
+  const [nextUrl, setNextUrl] = useState<string>('/');
+  const [error, setError] = useState<string | null>(null);
   const [pwd, setPwd] = useState('');
+
+  useEffect(() => {
+    // 只在客户端读取 URL 查询参数，避免 SSR 阶段差异
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      setNextUrl(sp.get('next') ?? '/');
+      setError(sp.get('error'));
+    } catch {
+      // 忽略
+    }
+  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
@@ -25,7 +34,7 @@ function UnlockForm() {
         )}
 
         <form method="POST" action="/api/unlock">
-          <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="next" value={nextUrl} />
           <input
             name="password"
             type="password"
@@ -48,13 +57,5 @@ function UnlockForm() {
         </p>
       </div>
     </main>
-  );
-}
-
-export default function UnlockPage() {
-  return (
-    <Suspense fallback={<div className="p-6 text-center">Loading…</div>}>
-      <UnlockForm />
-    </Suspense>
   );
 }

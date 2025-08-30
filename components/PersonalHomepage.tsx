@@ -260,14 +260,26 @@ function Collapsible({ header, children }: { header: React.ReactNode; children: 
 }
 
 function Card({ image, title, subtitle, href }: any) {
+  const Wrapper: any = href ? 'a' : 'div';
+  const wrapperProps = href
+    ? { href, target: '_blank', rel: 'noreferrer' }
+    : {};
+
   return (
-    <a href={href || "#"} target="_blank" rel="noreferrer" className="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition cursor-auto">
+    <Wrapper
+      {...wrapperProps}
+      className={`block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition ${
+        href ? 'cursor-pointer' : 'cursor-default'
+      }`}
+    >
       <img src={image} alt={title} className="w-full h-40 object-cover" />
       <div className="p-4">
-        <div className="font-semibold" style={{ color: primary }}>{title}</div>
+        <div className="font-semibold" style={{ color: primary }}>
+          {title}
+        </div>
         {subtitle && <div className="text-sm text-gray-500">{subtitle}</div>}
       </div>
-    </a>
+    </Wrapper>
   );
 }
 
@@ -319,12 +331,28 @@ export default function PersonalHomepage() {
 </div>
 <div className="text-sm flex">
   <span className="font-bold mr-1">LinkedIn:</span>
-  <span className="underline text-blue-600 whitespace-nowrap">{p.linkedin}</span>
+  <a
+    href={p.linkedin}
+    target="_blank"
+    rel="noreferrer"
+    className="underline text-blue-600"
+  >
+    {p.linkedin}
+  </a>
 </div>
+
 <div className="text-sm flex">
   <span className="font-bold mr-1">Self Interview:</span>
-  <span className="underline text-blue-600 whitespace-nowrap">{p.selfinterview}</span>
+  <a
+    href={p.selfinterview}
+    target="_blank"
+    rel="noreferrer"
+    className="underline text-blue-600"
+  >
+    {p.selfinterview}
+  </a>
 </div>
+
 
 </div>
   </div>
