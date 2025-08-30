@@ -148,7 +148,7 @@ const DATA = {
 
   activities: [
     {
-      title: "ICCDU, Lisbon (Oral)",
+      title: "International Conference on Carbon Dioxide Utilization (ICCDU), Lisbon (Oral)",
       date: "Jun. 2025",
       image: "/uploads/Activity/ICCDU/ICCDU_240625_0116©️ João Azevedo.jpg",
       href: "",
