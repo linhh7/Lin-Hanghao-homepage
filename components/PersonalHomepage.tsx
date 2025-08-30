@@ -129,9 +129,9 @@ const DATA = {
         "",
       links: [
         { label: "FTIR", href: "/uploads/Research skills/Charcterization techique/FTIR/html/index.html" },
+        { label: "XAS", href: "/uploads/Research skills/Charcterization techique/XAS/html/index.html" },
         { label: "SEM and TEM", href: "/uploads/Research skills/Charcterization techique/SEM and TEM/html/index.html" },
         { label: "TPX", href: "/uploads/Research skills/Charcterization techique/TPX/html/index.html" },
-        // { label: "XAS", href: "" },
         { label: "XPS", href: "/uploads/Research skills/Charcterization techique/XPS/html/index.html" },
         // { label: "XRD", href: "" },
       ],
