@@ -202,7 +202,7 @@ const DATA = {
 
   awards: [
     {
-      title: "Outstanding Research, OKCAT 2024",
+      title: "Osaka Metropolitan University President's Award",
       date: "Feb. 2025",
       image: "/uploads/Award/Outstanding Research, OKCAT 2024/3.jpg",
       proof: "",
