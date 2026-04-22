@@ -166,6 +166,7 @@
       }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   </head>
   <body>
     <main class="container">
@@ -208,6 +209,17 @@
 
       function sanitizeFileName(name) {
         return name.replace(/[\\/:*?"<>|]/g, "_");
+      }
+
+      function downloadBlob(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
       }
 
       function setSummary(html) {
@@ -293,7 +305,6 @@
           const header = rows[0];
           const rawDataRows = rows.slice(1);
 
-          // A列去重：同名只保留第一条，记录删除明细（行号基于原始Excel：首行为1）
           const seenA = new Map();
           const uniqueRows = [];
           const deletedRows = [];
@@ -303,7 +314,6 @@
             const colAValue = row[0];
             const key = String(colAValue ?? "").trim();
 
-            // 空值不参与去重，直接保留
             if (!key) {
               uniqueRows.push(row);
               return;
@@ -322,8 +332,11 @@
           });
 
           const totalChunks = Math.ceil(uniqueRows.length / chunkSize);
+          const base = sanitizeFileName(file.name.replace(/\.xlsx$/i, ""));
 
-          // 无限拆分：按数据量决定拆分数量，无上限
+          // 关键改进：不再逐个触发大量下载，统一打包ZIP下载，避免浏览器“最多约10个下载”的限制
+          const zip = new JSZip();
+
           for (let i = 0; i < totalChunks; i++) {
             const start = i * chunkSize;
             const end = start + chunkSize;
@@ -334,10 +347,14 @@
             const outWs = XLSX.utils.aoa_to_sheet(outData);
             XLSX.utils.book_append_sheet(outWb, outWs, "Sheet1");
 
-            const base = sanitizeFileName(file.name.replace(/\.xlsx$/i, ""));
             const outFile = `${base}_part_${String(i + 1).padStart(2, "0")}.xlsx`;
-            XLSX.writeFile(outWb, outFile);
+            const workbookArrayBuffer = XLSX.write(outWb, { bookType: "xlsx", type: "array" });
+            zip.file(outFile, workbookArrayBuffer);
           }
+
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          const zipName = `${base}_split_files.zip`;
+          downloadBlob(zipBlob, zipName);
 
           setSummary(`
             <div class="ok">处理完成 ✅</div>
@@ -345,7 +362,7 @@
             <div>A列去重后保留：<code>${uniqueRows.length}</code></div>
             <div>删除重复行：<code>${deletedRows.length}</code></div>
             <div>最终拆分文件数：<code>${totalChunks}</code></div>
-            <div>说明：每个拆分文件的第一行都保留原始第一行。</div>
+            <div>下载方式：已打包为 <code>${zipName}</code>（解决浏览器批量下载数量限制）</div>
           `);
 
           renderDeletedRows(deletedRows);

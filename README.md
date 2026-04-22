@@ -34,3 +34,4 @@ Put your images in `/public`. Avatar path is `/头像.jpg` (replace this file).
 3. 设置每个文档的行数（默认 200）
 4. 点击“开始处理并下载”
 5. 页面会显示统计信息，并可展开查看重复删除明细
+6. 结果会自动打包下载为一个 ZIP（避免浏览器批量下载数量限制）
