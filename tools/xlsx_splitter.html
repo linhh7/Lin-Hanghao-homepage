@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XLSX 智能拆分工具</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --border: #dbe3ee;
+        --ok: #15803d;
+        --warn: #b45309;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top, #eef4ff 0%, var(--bg) 48%, #f8fbff 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        width: min(920px, 100%);
+      }
+
+      .title {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.4rem, 2vw, 1.9rem);
+        font-weight: 700;
+      }
+
+      .subtitle {
+        margin: 0 0 1.2rem;
+        color: var(--muted);
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+        padding: 1.2rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+      }
+
+      .field {
+        margin-bottom: 1rem;
+      }
+
+      label {
+        display: block;
+        font-size: 0.94rem;
+        font-weight: 600;
+        margin-bottom: 0.45rem;
+      }
+
+      input[type="number"],
+      input[type="file"] {
+        width: 100%;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.6rem 0.65rem;
+        font-size: 0.96rem;
+      }
+
+      .tips {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.3rem;
+      }
+
+      button {
+        margin-top: 0.4rem;
+        border: none;
+        border-radius: 10px;
+        padding: 0.68rem 1.15rem;
+        font-size: 0.97rem;
+        font-weight: 600;
+        background: var(--primary);
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: var(--primary-hover);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        background: #94a3b8;
+      }
+
+      #summary {
+        margin-top: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 0.95rem;
+        line-height: 1.65;
+      }
+
+      .ok {
+        color: var(--ok);
+        font-weight: 600;
+      }
+
+      .warn {
+        color: var(--warn);
+        font-weight: 600;
+      }
+
+      details {
+        margin-top: 1rem;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.6rem;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 0.45rem 0.5rem;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      thead th {
+        background: #eef4ff;
+      }
+
+      code {
+        background: #e8eefc;
+        border-radius: 6px;
+        padding: 0.1rem 0.35rem;
+      }
+    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1 class="title">XLSX 智能拆分工具</h1>
+      <p class="subtitle">支持：按行数无限拆分 + A 列去重（同名只保留第一条）+ 处理结果统计。</p>
+
+      <section class="card">
+        <div class="grid">
+          <div class="field">
+            <label for="fileInput">1) 选择 Excel 文件（.xlsx）</label>
+            <input id="fileInput" type="file" accept=".xlsx" />
+            <div class="tips">点击选择即可，无需拖拽。</div>
+          </div>
+
+          <div class="field">
+            <label for="chunkSize">2) 每个文件分多少行（默认 200）</label>
+            <input id="chunkSize" type="number" value="200" min="1" />
+            <div class="tips">不会限制分成多少个文档：有多少数据就分多少个。</div>
+          </div>
+        </div>
+
+        <button id="splitBtn">开始处理并下载</button>
+
+        <div id="summary">等待开始...</div>
+
+        <details id="deletedPanel" hidden>
+          <summary>查看去重明细（删除了哪些行）</summary>
+          <div id="deletedTableWrap"></div>
+        </details>
+      </section>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const chunkSizeInput = document.getElementById("chunkSize");
+      const splitBtn = document.getElementById("splitBtn");
+      const summary = document.getElementById("summary");
+      const deletedPanel = document.getElementById("deletedPanel");
+      const deletedTableWrap = document.getElementById("deletedTableWrap");
+
+      function sanitizeFileName(name) {
+        return name.replace(/[\\/:*?"<>|]/g, "_");
+      }
+
+      function downloadBlob(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function setSummary(html) {
+        summary.innerHTML = html;
+      }
+
+      function renderDeletedRows(deletedRows) {
+        if (!deletedRows.length) {
+          deletedPanel.hidden = true;
+          deletedTableWrap.innerHTML = "";
+          return;
+        }
+
+        const head = `
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>删除的值（A列）</th>
+                <th>删除行号（原表）</th>
+                <th>首次保留行号（原表）</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        const rows = deletedRows
+          .map(
+            (item, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td>${item.value}</td>
+                <td>${item.removedRow}</td>
+                <td>${item.keptRow}</td>
+              </tr>
+            `
+          )
+          .join("");
+
+        const tail = `</tbody></table>`;
+        deletedPanel.hidden = false;
+        deletedTableWrap.innerHTML = head + rows + tail;
+      }
+
+      async function splitWorkbook() {
+        const file = fileInput.files?.[0];
+        if (!file) {
+          setSummary('<span class="warn">请先选择一个 .xlsx 文件。</span>');
+          return;
+        }
+
+        const chunkSize = Number.parseInt(chunkSizeInput.value, 10);
+        if (!Number.isInteger(chunkSize) || chunkSize <= 0) {
+          setSummary('<span class="warn">每个文件行数必须是大于 0 的整数。</span>');
+          return;
+        }
+
+        splitBtn.disabled = true;
+        deletedPanel.hidden = true;
+        deletedTableWrap.innerHTML = "";
+
+        try {
+          setSummary("正在读取并处理文件...");
+          const arrayBuffer = await file.arrayBuffer();
+          const wb = XLSX.read(arrayBuffer, { type: "array" });
+
+          if (!wb.SheetNames.length) {
+            throw new Error("文件中没有工作表。");
+          }
+
+          const wsName = wb.SheetNames[0];
+          const ws = wb.Sheets[wsName];
+          const rows = XLSX.utils.sheet_to_json(ws, {
+            header: 1,
+            defval: "",
+            blankrows: false,
+          });
+
+          if (rows.length <= 1) {
+            throw new Error("除首行外，没有可处理数据。");
+          }
+
+          const header = rows[0];
+          const rawDataRows = rows.slice(1);
+
+          const seenA = new Map();
+          const uniqueRows = [];
+          const deletedRows = [];
+
+          rawDataRows.forEach((row, idx) => {
+            const excelRowNo = idx + 2;
+            const colAValue = row[0];
+            const key = String(colAValue ?? "").trim();
+
+            if (!key) {
+              uniqueRows.push(row);
+              return;
+            }
+
+            if (seenA.has(key)) {
+              deletedRows.push({
+                value: key,
+                removedRow: excelRowNo,
+                keptRow: seenA.get(key),
+              });
+            } else {
+              seenA.set(key, excelRowNo);
+              uniqueRows.push(row);
+            }
+          });
+
+          const totalChunks = Math.ceil(uniqueRows.length / chunkSize);
+          const base = sanitizeFileName(file.name.replace(/\.xlsx$/i, ""));
+
+          // 关键改进：不再逐个触发大量下载，统一打包ZIP下载，避免浏览器“最多约10个下载”的限制
+          const zip = new JSZip();
+
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = start + chunkSize;
+            const chunkRows = uniqueRows.slice(start, end);
+            const outData = [header, ...chunkRows];
+
+            const outWb = XLSX.utils.book_new();
+            const outWs = XLSX.utils.aoa_to_sheet(outData);
+            XLSX.utils.book_append_sheet(outWb, outWs, "Sheet1");
+
+            const outFile = `${base}_part_${String(i + 1).padStart(2, "0")}.xlsx`;
+            const workbookArrayBuffer = XLSX.write(outWb, { bookType: "xlsx", type: "array" });
+            zip.file(outFile, workbookArrayBuffer);
+          }
+
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          const zipName = `${base}_split_files.zip`;
+          downloadBlob(zipBlob, zipName);
+
+          setSummary(`
+            <div class="ok">处理完成 ✅</div>
+            <div>原始数据行（不含首行）：<code>${rawDataRows.length}</code></div>
+            <div>A列去重后保留：<code>${uniqueRows.length}</code></div>
+            <div>删除重复行：<code>${deletedRows.length}</code></div>
+            <div>最终拆分文件数：<code>${totalChunks}</code></div>
+            <div>下载方式：已打包为 <code>${zipName}</code>（解决浏览器批量下载数量限制）</div>
+          `);
+
+          renderDeletedRows(deletedRows);
+        } catch (error) {
+          setSummary(`<span class="warn">处理失败：${error.message}</span>`);
+          deletedPanel.hidden = true;
+          deletedTableWrap.innerHTML = "";
+        } finally {
+          splitBtn.disabled = false;
+        }
+      }
+
+      splitBtn.addEventListener("click", splitWorkbook);
+    </script>
+  </body>
+</html>
