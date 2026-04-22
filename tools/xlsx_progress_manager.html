@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel 数据进度管理器</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --border: #dbe3ee;
+        --ok: #15803d;
+        --warn: #b45309;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 1.5rem 1rem 2.5rem;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top, #eef4ff 0%, var(--bg) 48%, #f8fbff 100%);
+      }
+      .container { width: min(1080px, 100%); margin: 0 auto; }
+      .title { margin: 0 0 0.5rem; font-size: clamp(1.4rem, 2.2vw, 2rem); }
+      .subtitle { margin: 0 0 1rem; color: var(--muted); }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 0.8rem;
+      }
+      label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+      input, select {
+        width: 100%;
+        padding: 0.55rem 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+      }
+      .tips { margin-top: 0.28rem; color: var(--muted); font-size: 0.82rem; }
+      button {
+        border: none;
+        border-radius: 9px;
+        background: var(--primary);
+        color: #fff;
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: var(--primary-hover); }
+      button:disabled { background: #94a3b8; cursor: not-allowed; }
+      .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem; }
+      .summary {
+        background: #f8fbff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.9rem;
+        line-height: 1.65;
+      }
+      .ok { color: var(--ok); font-weight: 700; }
+      .warn { color: var(--warn); font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 0.6rem; }
+      th, td { border: 1px solid var(--border); padding: 0.42rem 0.46rem; text-align: left; }
+      thead th { background: #eef4ff; }
+      .hidden { display: none; }
+    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1 class="title">Excel 数据进度管理器</h1>
+      <p class="subtitle">用于统计“已完成 / 未完成”、按处理人分组、并导出不同状态结果。</p>
+
+      <section class="card">
+        <div class="grid">
+          <div>
+            <label for="fileInput">1) 选择 Excel 文件（.xlsx）</label>
+            <input id="fileInput" type="file" accept=".xlsx" />
+            <div class="tips">建议第一行为表头。可处理几千~上万行数据。</div>
+          </div>
+          <div>
+            <label for="sheetSelect">2) 工作表</label>
+            <select id="sheetSelect" disabled></select>
+            <div class="tips">读取文件后自动列出所有 sheet。</div>
+          </div>
+          <div>
+            <label for="ownerCol">3) 处理人列（可选）</label>
+            <select id="ownerCol" disabled></select>
+            <div class="tips">比如：负责人 / 分配给 / 执行人。</div>
+          </div>
+          <div>
+            <label for="statusCol">4) 状态列（必选）</label>
+            <select id="statusCol" disabled></select>
+            <div class="tips">比如：状态 / 进度 / 是否完成。</div>
+          </div>
+          <div>
+            <label for="doneValues">5) 代表“已完成”的文本</label>
+            <input id="doneValues" value="已完成,完成,done,完成✅" />
+            <div class="tips">多个值用英文逗号分隔，忽略大小写和空格。</div>
+          </div>
+          <div>
+            <label for="pendingValues">6) 代表“未完成”的文本（可留空）</label>
+            <input id="pendingValues" value="未完成,进行中,todo,pending" />
+            <div class="tips">留空时，默认把“非已完成”都视为未完成。</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="analyzeBtn" disabled>开始统计</button>
+          <button id="exportDoneBtn" disabled>导出“已完成”</button>
+          <button id="exportPendingBtn" disabled>导出“未完成”</button>
+          <button id="exportSummaryBtn" disabled>导出统计报表</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="summary" class="summary">等待加载文件...</div>
+      </section>
+
+      <section class="card hidden" id="ownerPanel">
+        <h3>按处理人统计</h3>
+        <div id="ownerTableWrap"></div>
+      </section>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById('fileInput');
+      const sheetSelect = document.getElementById('sheetSelect');
+      const ownerCol = document.getElementById('ownerCol');
+      const statusCol = document.getElementById('statusCol');
+      const doneValuesInput = document.getElementById('doneValues');
+      const pendingValuesInput = document.getElementById('pendingValues');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const exportDoneBtn = document.getElementById('exportDoneBtn');
+      const exportPendingBtn = document.getElementById('exportPendingBtn');
+      const exportSummaryBtn = document.getElementById('exportSummaryBtn');
+      const summary = document.getElementById('summary');
+      const ownerPanel = document.getElementById('ownerPanel');
+      const ownerTableWrap = document.getElementById('ownerTableWrap');
+
+      let workbook = null;
+      let currentRows = [];
+      let currentHeaders = [];
+      let lastAnalysis = null;
+
+      function setSummary(html) {
+        summary.innerHTML = html;
+      }
+
+      function normalize(v) {
+        return String(v ?? '').trim().toLowerCase();
+      }
+
+      function parseKeywords(text) {
+        return text
+          .split(',')
+          .map(v => normalize(v))
+          .filter(Boolean);
+      }
+
+      function downloadWorkbook(wb, fileName) {
+        XLSX.writeFile(wb, fileName);
+      }
+
+      function toJsonRows(sheet) {
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (!matrix.length) return { headers: [], rows: [] };
+
+        const headers = matrix[0].map((cell, i) => String(cell || `列${i + 1}`).trim() || `列${i + 1}`);
+        const rows = matrix.slice(1).map((arr, idx) => {
+          const row = { __rowNum: idx + 2 };
+          headers.forEach((h, colIdx) => {
+            row[h] = arr[colIdx] ?? '';
+          });
+          return row;
+        });
+        return { headers, rows };
+      }
+
+      function fillSelect(selectEl, headers, includeEmptyOption = false) {
+        selectEl.innerHTML = '';
+        if (includeEmptyOption) {
+          const empty = document.createElement('option');
+          empty.value = '';
+          empty.textContent = '（不使用）';
+          selectEl.appendChild(empty);
+        }
+        headers.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          selectEl.appendChild(opt);
+        });
+        selectEl.disabled = headers.length === 0;
+      }
+
+      function renderOwnerStats(ownerStats) {
+        const entries = Object.entries(ownerStats).sort((a, b) => b[1].total - a[1].total);
+        if (!entries.length) {
+          ownerPanel.classList.add('hidden');
+          return;
+        }
+
+        ownerPanel.classList.remove('hidden');
+        ownerTableWrap.innerHTML = `
+          <table>
+            <thead>
+              <tr><th>处理人</th><th>总数</th><th>已完成</th><th>未完成</th><th>完成率</th></tr>
+            </thead>
+            <tbody>
+              ${entries.map(([name, item]) => {
+                const rate = item.total ? ((item.done / item.total) * 100).toFixed(1) + '%' : '0%';
+                return `<tr><td>${name}</td><td>${item.total}</td><td>${item.done}</td><td>${item.pending}</td><td>${rate}</td></tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      function doAnalyze() {
+        const statusKey = statusCol.value;
+        const ownerKey = ownerCol.value;
+        if (!statusKey) {
+          setSummary('<span class="warn">请先选择“状态列”。</span>');
+          return;
+        }
+
+        const doneKeywords = parseKeywords(doneValuesInput.value);
+        const pendingKeywords = parseKeywords(pendingValuesInput.value);
+
+        const doneRows = [];
+        const pendingRows = [];
+        const unknownRows = [];
+        const ownerStats = {};
+
+        for (const row of currentRows) {
+          const statusText = normalize(row[statusKey]);
+          const owner = ownerKey ? String(row[ownerKey] || '（未填写）').trim() || '（未填写）' : '（未分配）';
+
+          const isDone = doneKeywords.includes(statusText);
+          const isPending = pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone;
+
+          if (isDone) {
+            doneRows.push(row);
+          } else if (isPending) {
+            pendingRows.push(row);
+          } else {
+            unknownRows.push(row);
+          }
+
+          if (!ownerStats[owner]) ownerStats[owner] = { total: 0, done: 0, pending: 0 };
+          ownerStats[owner].total += 1;
+          if (isDone) ownerStats[owner].done += 1;
+          if (isPending) ownerStats[owner].pending += 1;
+        }
+
+        const total = currentRows.length;
+        const doneRate = total ? ((doneRows.length / total) * 100).toFixed(2) : '0.00';
+
+        setSummary(`
+          总数据：<b>${total}</b> 条<br>
+          <span class="ok">已完成：${doneRows.length}</span> 条<br>
+          <span class="warn">未完成：${pendingRows.length}</span> 条<br>
+          状态未识别：${unknownRows.length} 条<br>
+          完成率：<b>${doneRate}%</b><br>
+          <small>说明：未识别表示“状态值既不在已完成关键词，也不在未完成关键词中”。</small>
+        `);
+
+        renderOwnerStats(ownerStats);
+
+        lastAnalysis = {
+          doneRows,
+          pendingRows,
+          unknownRows,
+          ownerStats,
+          total,
+          doneRate,
+          statusKey,
+          ownerKey,
+          doneKeywords,
+          pendingKeywords
+        };
+
+        exportDoneBtn.disabled = false;
+        exportPendingBtn.disabled = false;
+        exportSummaryBtn.disabled = false;
+      }
+
+      function exportRows(rows, fileName) {
+        const rowsForExport = rows.map(r => {
+          const copy = { ...r };
+          delete copy.__rowNum;
+          return copy;
+        });
+        const ws = XLSX.utils.json_to_sheet(rowsForExport, { header: currentHeaders });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '数据');
+        downloadWorkbook(wb, fileName);
+      }
+
+      function exportSummarySheet() {
+        if (!lastAnalysis) return;
+        const rows = Object.entries(lastAnalysis.ownerStats).map(([owner, stat]) => ({
+          处理人: owner,
+          总数: stat.total,
+          已完成: stat.done,
+          未完成: stat.pending,
+          完成率: stat.total ? `${((stat.done / stat.total) * 100).toFixed(2)}%` : '0%'
+        }));
+
+        const overview = [{
+          总数据: lastAnalysis.total,
+          已完成: lastAnalysis.doneRows.length,
+          未完成: lastAnalysis.pendingRows.length,
+          状态未识别: lastAnalysis.unknownRows.length,
+          完成率: `${lastAnalysis.doneRate}%`,
+          状态列: lastAnalysis.statusKey,
+          处理人列: lastAnalysis.ownerKey || '（未使用）',
+          已完成关键词: lastAnalysis.doneKeywords.join(', '),
+          未完成关键词: lastAnalysis.pendingKeywords.join(', ') || '（空，默认非已完成即未完成）'
+        }];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(overview), '总览');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), '按处理人');
+        downloadWorkbook(wb, '数据进度统计报表.xlsx');
+      }
+
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const arrayBuffer = await file.arrayBuffer();
+        workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+        sheetSelect.innerHTML = '';
+        workbook.SheetNames.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          sheetSelect.appendChild(opt);
+        });
+
+        sheetSelect.disabled = false;
+        setSummary('文件已加载，请选择列并点击“开始统计”。');
+
+        const loadSheet = () => {
+          const sheetName = sheetSelect.value;
+          const sheet = workbook.Sheets[sheetName];
+          const { headers, rows } = toJsonRows(sheet);
+
+          currentHeaders = headers;
+          currentRows = rows;
+
+          fillSelect(ownerCol, headers, true);
+          fillSelect(statusCol, headers, false);
+
+          analyzeBtn.disabled = headers.length === 0;
+          exportDoneBtn.disabled = true;
+          exportPendingBtn.disabled = true;
+          exportSummaryBtn.disabled = true;
+          ownerPanel.classList.add('hidden');
+          lastAnalysis = null;
+        };
+
+        sheetSelect.onchange = loadSheet;
+        loadSheet();
+      });
+
+      analyzeBtn.addEventListener('click', doAnalyze);
+      exportDoneBtn.addEventListener('click', () => {
+        if (!lastAnalysis) return;
+        exportRows(lastAnalysis.doneRows, '已完成数据.xlsx');
+      });
+      exportPendingBtn.addEventListener('click', () => {
+        if (!lastAnalysis) return;
+        exportRows(lastAnalysis.pendingRows, '未完成数据.xlsx');
+      });
+      exportSummaryBtn.addEventListener('click', exportSummarySheet);
+    </script>
+  </body>
+</html>
