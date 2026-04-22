@@ -18,15 +18,19 @@ Put your images in `/public`. Avatar path is `/头像.jpg` (replace this file).
 
 (Optional) Add a custom domain in Vercel's **Domains** tab.
 
-## XLSX 拆分小工具（按 200 行自动分档）
-如果你想“一键把 `.xlsx` 文件（跳过第一行）按每 200 行拆成多个文档”，可以直接打开：
+## XLSX 智能拆分工具（独立 HTML）
+工具文件：`tools/xlsx_splitter.html`
 
-- `tools/xlsx_splitter.html`
+### 功能
+- 按固定行数拆分（默认 200 行）
+- 拆分文档数量不设上限（有多少数据就拆多少）
+- A 列去重（A 列名称相同只保留第一条，删除后续重复行）
+- 每个拆分文档都保留原始第一行为首行
+- 页面显示统计结果：删除了多少、删除了哪些、在第几行、最终拆成多少个表格
 
 ### 使用方法
-1. 双击打开 `tools/xlsx_splitter.html`。
-2. 选择你的 `.xlsx` 文件。
-3. 设置每份文档行数（默认 200）。
-4. 点击 **开始拆分并下载**。
-
-默认会读取第一个工作表，把首行作为每个拆分文件的第一行，后续数据按固定行数拆成多个 `.xlsx` 文件并自动下载。
+1. 双击打开 `tools/xlsx_splitter.html`
+2. 点击选择 `.xlsx` 文件
+3. 设置每个文档的行数（默认 200）
+4. 点击“开始处理并下载”
+5. 页面会显示统计信息，并可展开查看重复删除明细
