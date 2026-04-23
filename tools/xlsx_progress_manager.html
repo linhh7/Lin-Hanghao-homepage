@@ -16,11 +16,7 @@
         --ok: #15803d;
         --warn: #b45309;
       }
-
-      * {
-        box-sizing: border-box;
-      }
-
+      * { box-sizing: border-box; }
       body {
         margin: 0;
         padding: 1.5rem 1rem 2.5rem;
@@ -28,22 +24,9 @@
         color: var(--text);
         background: radial-gradient(circle at top, #eef4ff 0%, var(--bg) 48%, #f8fbff 100%);
       }
-
-      .container {
-        width: min(1140px, 100%);
-        margin: 0 auto;
-      }
-
-      .title {
-        margin: 0 0 0.5rem;
-        font-size: clamp(1.35rem, 2.2vw, 2rem);
-      }
-
-      .subtitle {
-        margin: 0 0 1rem;
-        color: var(--muted);
-      }
-
+      .container { width: min(1180px, 100%); margin: 0 auto; }
+      .title { margin: 0 0 0.5rem; font-size: clamp(1.35rem, 2.2vw, 2rem); }
+      .subtitle { margin: 0 0 1rem; color: var(--muted); }
       .card {
         background: var(--card);
         border: 1px solid var(--border);
@@ -52,39 +35,19 @@
         padding: 1rem;
         margin-bottom: 1rem;
       }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 0.8rem;
-      }
-
-      label {
-        display: block;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-bottom: 0.3rem;
-      }
-
-      input,
-      select {
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.8rem; }
+      label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+      input, select {
         width: 100%;
         padding: 0.55rem 0.6rem;
         border: 1px solid var(--border);
         border-radius: 8px;
         background: #fff;
       }
-
-      .tips {
-        margin-top: 0.28rem;
-        color: var(--muted);
-        font-size: 0.82rem;
-      }
-
+      .tips { margin-top: 0.28rem; color: var(--muted); font-size: 0.82rem; }
       .file-list {
         margin-top: 0.45rem;
         font-size: 0.84rem;
-        color: #0f172a;
         max-height: 120px;
         overflow: auto;
         border: 1px dashed var(--border);
@@ -92,7 +55,6 @@
         padding: 0.45rem;
         background: #f8fbff;
       }
-
       button {
         border: none;
         border-radius: 9px;
@@ -102,23 +64,9 @@
         font-weight: 600;
         cursor: pointer;
       }
-
-      button:hover {
-        background: var(--primary-hover);
-      }
-
-      button:disabled {
-        background: #94a3b8;
-        cursor: not-allowed;
-      }
-
-      .actions {
-        display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-        margin-top: 0.85rem;
-      }
-
+      button:hover { background: var(--primary-hover); }
+      button:disabled { background: #94a3b8; cursor: not-allowed; }
+      .actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem; }
       .summary {
         background: #f8fbff;
         border: 1px solid var(--border);
@@ -126,149 +74,131 @@
         padding: 0.9rem;
         line-height: 1.65;
       }
-
-      .ok {
-        color: var(--ok);
-        font-weight: 700;
-      }
-
-      .warn {
-        color: var(--warn);
-        font-weight: 700;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-        margin-top: 0.6rem;
-      }
-
-      th,
-      td {
-        border: 1px solid var(--border);
-        padding: 0.42rem 0.46rem;
-        text-align: left;
-        vertical-align: top;
-      }
-
-      thead th {
-        background: #eef4ff;
-      }
-
-      .hidden {
-        display: none;
-      }
+      .ok { color: var(--ok); font-weight: 700; }
+      .warn { color: var(--warn); font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 0.6rem; }
+      th, td { border: 1px solid var(--border); padding: 0.42rem 0.46rem; text-align: left; vertical-align: top; }
+      thead th { background: #eef4ff; }
+      .hidden { display: none; }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   </head>
   <body>
     <main class="container">
       <h1 class="title">Excel 多文件进度汇总器</h1>
-      <p class="subtitle">一次上传多个 Excel，自动汇总，标记未完成，并定位到“哪个文件 + 哪个 Sheet + 哪行哪列”。</p>
+      <p class="subtitle">多文件汇总 + 未完成定位 + A列去重规则 + 服装/食品/药品分类提取。</p>
 
       <section class="card">
         <div class="grid">
           <div>
             <label for="fileInput">1) 选择多个 Excel 文件（.xlsx）</label>
             <input id="fileInput" type="file" accept=".xlsx" multiple />
-            <div class="tips">可同时上传多个文件进行统一汇总分析。</div>
+            <div class="tips">可同时上传多个文件。</div>
             <div id="fileList" class="file-list">暂未选择文件</div>
           </div>
 
           <div>
             <label for="sheetMode">2) 读取方式</label>
             <select id="sheetMode">
-              <option value="first">读取每个文件的第一个 Sheet（推荐）</option>
-              <option value="all">读取每个文件的所有 Sheet</option>
+              <option value="first">读取每个文件第一个 Sheet（推荐）</option>
+              <option value="all">读取每个文件所有 Sheet</option>
             </select>
-            <div class="tips">如果你每个文件结构一致，建议使用第一个 Sheet，速度更快。</div>
           </div>
 
           <div>
-            <label for="statusCol">3) 状态列（必选）</label>
+            <label for="statusCol">3) 状态列（进度判断）</label>
             <select id="statusCol" disabled></select>
-            <div class="tips">例如：状态 / 是否完成 / 进度。</div>
           </div>
 
           <div>
             <label for="ownerCol">4) 处理人列（可选）</label>
             <select id="ownerCol" disabled></select>
-            <div class="tips">例如：负责人 / 分配给 / 执行人。</div>
           </div>
 
           <div>
-            <label for="doneValues">5) 代表“已完成”的文本</label>
+            <label for="colA">5) A列（去重+分类识别）</label>
+            <select id="colA" disabled></select>
+            <div class="tips">用于识别“服装类/食品/药品类”。</div>
+          </div>
+
+          <div>
+            <label for="colC">6) C列（数值比较列）</label>
+            <select id="colC" disabled></select>
+            <div class="tips">同A但D不同时，用C值较高者保留。</div>
+          </div>
+
+          <div>
+            <label for="colD">7) D列（网址列）</label>
+            <select id="colD" disabled></select>
+            <div class="tips">用于判断“同A但D不同”。</div>
+          </div>
+
+          <div>
+            <label for="doneValues">8) “已完成”关键词</label>
             <input id="doneValues" value="已完成,完成,done,complete,完成✅" />
-            <div class="tips">多个值用英文逗号分隔，自动忽略大小写与首尾空格。</div>
           </div>
 
           <div>
-            <label for="pendingValues">6) 代表“未完成”的文本（可留空）</label>
+            <label for="pendingValues">9) “未完成”关键词（可空）</label>
             <input id="pendingValues" value="未完成,进行中,todo,pending,未处理" />
-            <div class="tips">留空时，默认“非已完成”都按未完成处理。</div>
           </div>
         </div>
 
         <div class="actions">
           <button id="analyzeBtn" disabled>开始汇总统计</button>
           <button id="exportPendingBtn" disabled>导出未完成清单</button>
-          <button id="exportFullBtn" disabled>导出完整总表（不筛选）</button>
           <button id="exportSummaryBtn" disabled>导出总报告</button>
+          <button id="exportCategoryBtn" disabled>导出服装/食品/药品表</button>
+          <button id="exportCleanBtn" disabled>导出不含分类数据（按源文件拆分ZIP）</button>
         </div>
       </section>
 
-      <section class="card">
-        <div id="summary" class="summary">等待上传文件...</div>
-      </section>
-
-      <section class="card hidden" id="ownerPanel">
-        <h3>按处理人统计</h3>
-        <div id="ownerTableWrap"></div>
-      </section>
-
-      <section class="card hidden" id="pendingPanel">
-        <h3>未完成定位（前 200 条）</h3>
-        <div id="pendingTableWrap"></div>
-      </section>
+      <section class="card"><div id="summary" class="summary">等待上传文件...</div></section>
+      <section class="card hidden" id="pendingPanel"><h3>未完成定位（前 200 条）</h3><div id="pendingTableWrap"></div></section>
+      <section class="card hidden" id="categoryPanel"><h3>分类命中预览（前 200 条）</h3><div id="categoryTableWrap"></div></section>
     </main>
 
     <script>
+      const CATEGORY_RULES = [
+        { key: '服装类', words: ['服装类', '服装'] },
+        { key: '食品', words: ['食品', '食物'] },
+        { key: '药品类', words: ['药品类', '药品', '药'] }
+      ];
+
       const fileInput = document.getElementById('fileInput');
       const fileList = document.getElementById('fileList');
       const sheetMode = document.getElementById('sheetMode');
       const statusCol = document.getElementById('statusCol');
       const ownerCol = document.getElementById('ownerCol');
+      const colA = document.getElementById('colA');
+      const colC = document.getElementById('colC');
+      const colD = document.getElementById('colD');
       const doneValuesInput = document.getElementById('doneValues');
       const pendingValuesInput = document.getElementById('pendingValues');
       const analyzeBtn = document.getElementById('analyzeBtn');
       const exportPendingBtn = document.getElementById('exportPendingBtn');
-      const exportFullBtn = document.getElementById('exportFullBtn');
       const exportSummaryBtn = document.getElementById('exportSummaryBtn');
+      const exportCategoryBtn = document.getElementById('exportCategoryBtn');
+      const exportCleanBtn = document.getElementById('exportCleanBtn');
       const summary = document.getElementById('summary');
-      const ownerPanel = document.getElementById('ownerPanel');
-      const ownerTableWrap = document.getElementById('ownerTableWrap');
       const pendingPanel = document.getElementById('pendingPanel');
       const pendingTableWrap = document.getElementById('pendingTableWrap');
+      const categoryPanel = document.getElementById('categoryPanel');
+      const categoryTableWrap = document.getElementById('categoryTableWrap');
 
       let mergedRows = [];
       let mergedHeaders = [];
       let lastAnalysis = null;
 
-      function normalize(v) {
-        return String(v ?? '').trim().toLowerCase();
-      }
+      const normalize = (v) => String(v ?? '').trim().toLowerCase();
+      const parseKeywords = (text) => text.split(',').map((v) => normalize(v)).filter(Boolean);
+      const toNumber = (v) => {
+        const num = Number(String(v ?? '').replace(/,/g, '').trim());
+        return Number.isFinite(num) ? num : Number.NEGATIVE_INFINITY;
+      };
 
-      function parseKeywords(text) {
-        return text
-          .split(',')
-          .map((item) => normalize(item))
-          .filter(Boolean);
-      }
-
-      function setSummary(html) {
-        summary.innerHTML = html;
-      }
+      function setSummary(html) { summary.innerHTML = html; }
 
       function fillSelect(selectEl, headers, includeEmptyOption = false) {
         selectEl.innerHTML = '';
@@ -278,258 +208,161 @@
           empty.textContent = '（不使用）';
           selectEl.appendChild(empty);
         }
-
-        headers.forEach((name) => {
+        headers.forEach((h) => {
           const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = name;
+          opt.value = h;
+          opt.textContent = h;
           selectEl.appendChild(opt);
         });
-
         selectEl.disabled = headers.length === 0;
       }
 
       function toRowsWithMeta(sheet, fileName, sheetName) {
         const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
         if (!matrix.length) return { headers: [], rows: [] };
-
-        const headers = matrix[0].map((cell, idx) => String(cell || `列${idx + 1}`).trim() || `列${idx + 1}`);
-        const rows = matrix.slice(1).map((arr, rowIdx) => {
-          const row = {
-            __file: fileName,
-            __sheet: sheetName,
-            __rowNum: rowIdx + 2
-          };
-
-          headers.forEach((h, colIdx) => {
-            row[h] = arr[colIdx] ?? '';
-          });
-
+        const headers = matrix[0].map((c, i) => String(c || `列${i + 1}`).trim() || `列${i + 1}`);
+        const rows = matrix.slice(1).map((arr, idx) => {
+          const row = { __file: fileName, __sheet: sheetName, __rowNum: idx + 2 };
+          headers.forEach((h, colIdx) => { row[h] = arr[colIdx] ?? ''; });
           return row;
         });
-
         return { headers, rows };
       }
 
-      function toUnifiedRows(headersSet, rows) {
-        const headers = Array.from(headersSet);
-        const unifiedRows = rows.map((row) => {
-          const out = {
-            来源文件: row.__file,
-            来源Sheet: row.__sheet,
-            来源行号: row.__rowNum
-          };
+      function dedupeByAWithUrlRule(rows, keyA, keyC, keyD) {
+        if (!keyA || !keyC || !keyD) return { keptRows: rows, removedRows: [] };
 
-          headers.forEach((h) => {
-            out[h] = row[h] ?? '';
-          });
-
-          return out;
-        });
-
-        return { headers, unifiedRows };
-      }
-
-      function renderOwnerStats(ownerStats) {
-        const entries = Object.entries(ownerStats).sort((a, b) => b[1].total - a[1].total);
-        if (!entries.length) {
-          ownerPanel.classList.add('hidden');
-          return;
-        }
-
-        ownerPanel.classList.remove('hidden');
-        ownerTableWrap.innerHTML = `
-          <table>
-            <thead>
-              <tr><th>处理人</th><th>总数</th><th>已完成</th><th>未完成</th><th>完成率</th></tr>
-            </thead>
-            <tbody>
-              ${entries
-                .map(([name, item]) => {
-                  const rate = item.total ? `${((item.done / item.total) * 100).toFixed(2)}%` : '0%';
-                  return `<tr><td>${name}</td><td>${item.total}</td><td>${item.done}</td><td>${item.pending}</td><td>${rate}</td></tr>`;
-                })
-                .join('')}
-            </tbody>
-          </table>
-        `;
-      }
-
-      function renderPendingPreview(pendingLocations) {
-        if (!pendingLocations.length) {
-          pendingPanel.classList.add('hidden');
-          pendingTableWrap.innerHTML = '';
-          return;
-        }
-
-        pendingPanel.classList.remove('hidden');
-        const preview = pendingLocations.slice(0, 200);
-
-        pendingTableWrap.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>文件</th>
-                <th>Sheet</th>
-                <th>行号</th>
-                <th>列名</th>
-                <th>当前值</th>
-                <th>处理人</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${preview
-                .map(
-                  (item, idx) =>
-                    `<tr><td>${idx + 1}</td><td>${item.文件}</td><td>${item.Sheet}</td><td>${item.行号}</td><td>${item.列名}</td><td>${item.当前值}</td><td>${item.处理人}</td></tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>
-          <div class="tips">只展示前 200 条；完整数据请点击“导出未完成清单”。</div>
-        `;
-      }
-
-      function exportWorkbook(sheets, fileName) {
-        const wb = XLSX.utils.book_new();
-        sheets.forEach(({ name, rows, headers }) => {
-          const ws = XLSX.utils.json_to_sheet(rows, headers ? { header: headers } : undefined);
-          XLSX.utils.book_append_sheet(wb, ws, name);
-        });
-        XLSX.writeFile(wb, fileName);
-      }
-
-      function analyzeData() {
-        const statusKey = statusCol.value;
-        const ownerKey = ownerCol.value;
-
-        if (!statusKey) {
-          setSummary('<span class="warn">请先选择“状态列”。</span>');
-          return;
-        }
-
-        const doneKeywords = parseKeywords(doneValuesInput.value);
-        const pendingKeywords = parseKeywords(pendingValuesInput.value);
-
-        const doneRows = [];
-        const pendingRows = [];
-        const unknownRows = [];
-        const pendingLocations = [];
-        const ownerStats = {};
-        const fileStats = {};
-
-        mergedRows.forEach((row) => {
-          const statusValue = row[statusKey] ?? '';
-          const statusText = normalize(statusValue);
-          const owner = ownerKey ? String(row[ownerKey] || '（未填写）').trim() || '（未填写）' : '（未分配）';
-          const isDone = doneKeywords.includes(statusText);
-          const isPending = pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone;
-
-          if (!ownerStats[owner]) ownerStats[owner] = { total: 0, done: 0, pending: 0 };
-          ownerStats[owner].total += 1;
-
-          const fileKey = `${row.__file}@@${row.__sheet}`;
-          if (!fileStats[fileKey]) {
-            fileStats[fileKey] = {
-              文件: row.__file,
-              Sheet: row.__sheet,
-              总数: 0,
-              已完成: 0,
-              未完成: 0,
-              未识别: 0
-            };
+        const group = new Map();
+        rows.forEach((r) => {
+          const a = String(r[keyA] ?? '').trim();
+          if (!a) {
+            const uniq = `__EMPTY__${Math.random().toString(36).slice(2)}`;
+            group.set(uniq, [r]);
+            return;
           }
-          fileStats[fileKey].总数 += 1;
+          if (!group.has(a)) group.set(a, []);
+          group.get(a).push(r);
+        });
 
-          if (isDone) {
-            doneRows.push(row);
-            ownerStats[owner].done += 1;
-            fileStats[fileKey].已完成 += 1;
-          } else if (isPending) {
-            pendingRows.push(row);
-            ownerStats[owner].pending += 1;
-            fileStats[fileKey].未完成 += 1;
-            pendingLocations.push({
-              文件: row.__file,
-              Sheet: row.__sheet,
-              行号: row.__rowNum,
-              列名: statusKey,
-              当前值: statusValue,
-              处理人: owner
-            });
+        const keptRows = [];
+        const removedRows = [];
+
+        group.forEach((arr) => {
+          if (arr.length <= 1) {
+            keptRows.push(...arr);
+            return;
+          }
+
+          const dSet = new Set(arr.map((r) => String(r[keyD] ?? '').trim()));
+          const needCompareC = dSet.size > 1;
+
+          if (needCompareC) {
+            const sorted = [...arr].sort((a, b) => toNumber(b[keyC]) - toNumber(a[keyC]));
+            keptRows.push(sorted[0]);
+            sorted.slice(1).forEach((r) => removedRows.push({
+              文件: r.__file,
+              Sheet: r.__sheet,
+              行号: r.__rowNum,
+              A列值: r[keyA],
+              C列值: r[keyC],
+              D列值: r[keyD],
+              删除原因: '同A且D不同，C值较低'
+            }));
           } else {
-            unknownRows.push(row);
-            fileStats[fileKey].未识别 += 1;
+            keptRows.push(arr[0]);
+            arr.slice(1).forEach((r) => removedRows.push({
+              文件: r.__file,
+              Sheet: r.__sheet,
+              行号: r.__rowNum,
+              A列值: r[keyA],
+              C列值: r[keyC],
+              D列值: r[keyD],
+              删除原因: '同A且D相同，保留首条'
+            }));
           }
         });
 
-        const total = mergedRows.length;
-        const doneRate = total ? ((doneRows.length / total) * 100).toFixed(2) : '0.00';
+        return { keptRows, removedRows };
+      }
 
-        setSummary(`
-          文件数：<b>${new Set(mergedRows.map((r) => r.__file)).size}</b> 个<br>
-          汇总总行数：<b>${total}</b> 条<br>
-          <span class="ok">已完成：${doneRows.length}</span> 条<br>
-          <span class="warn">未完成：${pendingRows.length}</span> 条<br>
-          未识别：${unknownRows.length} 条<br>
-          总完成率：<b>${doneRate}%</b><br>
-          <small>未完成定位信息已生成，可直接导出“未完成清单”。</small>
-        `);
+      function detectCategory(text) {
+        const value = String(text ?? '').trim();
+        const hits = CATEGORY_RULES.filter((r) => r.words.some((w) => value.includes(w))).map((r) => r.key);
+        return Array.from(new Set(hits));
+      }
 
-        renderOwnerStats(ownerStats);
-        renderPendingPreview(pendingLocations);
+      function renderTable(container, columns, rows) {
+        container.innerHTML = `
+          <table>
+            <thead><tr>${columns.map((c) => `<th>${c}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map((r) => `<tr>${columns.map((c) => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>
+        `;
+      }
 
-        lastAnalysis = {
-          statusKey,
-          ownerKey,
-          doneKeywords,
-          pendingKeywords,
-          total,
-          doneRate,
-          doneRows,
-          pendingRows,
-          unknownRows,
-          pendingLocations,
-          ownerStats,
-          fileStats: Object.values(fileStats)
-        };
+      function exportWorkbook(sheets, name) {
+        const wb = XLSX.utils.book_new();
+        sheets.forEach(({ sheetName, rows, headers }) => {
+          const ws = XLSX.utils.json_to_sheet(rows, headers ? { header: headers } : undefined);
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+        XLSX.writeFile(wb, name);
+      }
 
-        exportPendingBtn.disabled = false;
-        exportFullBtn.disabled = false;
-        exportSummaryBtn.disabled = false;
+      async function exportCleanZipBySource(cleanRows, headers) {
+        const byFile = new Map();
+        cleanRows.forEach((r) => {
+          if (!byFile.has(r.__file)) byFile.set(r.__file, []);
+          byFile.get(r.__file).push(r);
+        });
+
+        const zip = new JSZip();
+        for (const [fileName, rows] of byFile.entries()) {
+          const exportRows = rows.map((r) => {
+            const out = { 来源文件: r.__file, 来源Sheet: r.__sheet, 来源行号: r.__rowNum };
+            headers.forEach((h) => { out[h] = r[h] ?? ''; });
+            return out;
+          });
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(exportRows, { header: ['来源文件', '来源Sheet', '来源行号', ...headers] });
+          XLSX.utils.book_append_sheet(wb, ws, '不含分类数据');
+          const content = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+          const safeName = fileName.replace(/\.xlsx$/i, '').replace(/[\\/:*?"<>|]/g, '_');
+          zip.file(`${safeName}_不含分类数据.xlsx`, content);
+        }
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '不含服装食品药品_按文件拆分.zip';
+        a.click();
+        URL.revokeObjectURL(a.href);
       }
 
       async function loadFiles(files) {
         mergedRows = [];
         mergedHeaders = [];
         lastAnalysis = null;
-        ownerPanel.classList.add('hidden');
         pendingPanel.classList.add('hidden');
-        exportPendingBtn.disabled = true;
-        exportFullBtn.disabled = true;
-        exportSummaryBtn.disabled = true;
+        categoryPanel.classList.add('hidden');
+        [exportPendingBtn, exportSummaryBtn, exportCategoryBtn, exportCleanBtn].forEach((btn) => (btn.disabled = true));
 
         if (!files.length) {
           setSummary('等待上传文件...');
           fileList.textContent = '暂未选择文件';
           analyzeBtn.disabled = true;
-          statusCol.disabled = true;
-          ownerCol.disabled = true;
+          [statusCol, ownerCol, colA, colC, colD].forEach((s) => (s.disabled = true));
           return;
         }
 
-        fileList.innerHTML = files.map((f, idx) => `${idx + 1}. ${f.name}`).join('<br>');
+        fileList.innerHTML = files.map((f, i) => `${i + 1}. ${f.name}`).join('<br>');
         setSummary('正在读取文件，请稍候...');
 
         const headersSet = new Set();
         const mode = sheetMode.value;
 
         for (const file of files) {
-          const buf = await file.arrayBuffer();
-          const wb = XLSX.read(buf, { type: 'array' });
+          const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
           const targetSheets = mode === 'all' ? wb.SheetNames : [wb.SheetNames[0]];
-
           targetSheets.forEach((sheetName) => {
             const sheet = wb.Sheets[sheetName];
             if (!sheet) return;
@@ -540,100 +373,201 @@
         }
 
         mergedHeaders = Array.from(headersSet);
-        fillSelect(statusCol, mergedHeaders, false);
+        fillSelect(statusCol, mergedHeaders);
         fillSelect(ownerCol, mergedHeaders, true);
+        fillSelect(colA, mergedHeaders);
+        fillSelect(colC, mergedHeaders);
+        fillSelect(colD, mergedHeaders);
 
         analyzeBtn.disabled = mergedRows.length === 0;
-        setSummary(`文件读取完成：共 ${files.length} 个文件，${mergedRows.length} 条可分析数据。请选择列后点击“开始汇总统计”。`);
+        setSummary(`读取完成：${files.length} 个文件，${mergedRows.length} 条数据。请选择列后点击“开始汇总统计”。`);
       }
 
-      fileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files || []);
-        loadFiles(files);
-      });
+      function analyzeData() {
+        if (!statusCol.value || !colA.value || !colC.value || !colD.value) {
+          setSummary('<span class="warn">请至少选择状态列、A列、C列、D列再分析。</span>');
+          return;
+        }
 
+        const doneKeywords = parseKeywords(doneValuesInput.value);
+        const pendingKeywords = parseKeywords(pendingValuesInput.value);
+
+        const dedupeResult = dedupeByAWithUrlRule(mergedRows, colA.value, colC.value, colD.value);
+        const rows = dedupeResult.keptRows;
+
+        const doneRows = [];
+        const pendingRows = [];
+        const unknownRows = [];
+        const pendingLocations = [];
+        const ownerStats = {};
+        const fileStats = {};
+        const categoryRows = [];
+        const cleanRows = [];
+
+        rows.forEach((row) => {
+          const statusText = normalize(row[statusCol.value]);
+          const isDone = doneKeywords.includes(statusText);
+          const isPending = pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone;
+          const owner = ownerCol.value ? String(row[ownerCol.value] || '（未填写）').trim() || '（未填写）' : '（未分配）';
+
+          const cats = detectCategory(row[colA.value]);
+          if (cats.length) {
+            categoryRows.push({
+              文件: row.__file,
+              Sheet: row.__sheet,
+              行号: row.__rowNum,
+              A列值: row[colA.value],
+              分类: cats.join('、')
+            });
+          } else {
+            cleanRows.push(row);
+          }
+
+          if (!ownerStats[owner]) ownerStats[owner] = { total: 0, done: 0, pending: 0 };
+          ownerStats[owner].total += 1;
+
+          const fk = `${row.__file}@@${row.__sheet}`;
+          if (!fileStats[fk]) fileStats[fk] = { 文件: row.__file, Sheet: row.__sheet, 总数: 0, 已完成: 0, 未完成: 0, 未识别: 0 };
+          fileStats[fk].总数 += 1;
+
+          if (isDone) {
+            doneRows.push(row);
+            ownerStats[owner].done += 1;
+            fileStats[fk].已完成 += 1;
+          } else if (isPending) {
+            pendingRows.push(row);
+            ownerStats[owner].pending += 1;
+            fileStats[fk].未完成 += 1;
+            pendingLocations.push({ 文件: row.__file, Sheet: row.__sheet, 行号: row.__rowNum, 列名: statusCol.value, 当前值: row[statusCol.value], 处理人: owner });
+          } else {
+            unknownRows.push(row);
+            fileStats[fk].未识别 += 1;
+          }
+        });
+
+        const total = rows.length;
+        const doneRate = total ? ((doneRows.length / total) * 100).toFixed(2) : '0.00';
+
+        setSummary(`
+          去重前：<b>${mergedRows.length}</b> 条；去重后：<b>${total}</b> 条（删除 ${dedupeResult.removedRows.length} 条）<br>
+          <span class="ok">已完成：${doneRows.length}</span> 条；<span class="warn">未完成：${pendingRows.length}</span> 条；未识别：${unknownRows.length} 条<br>
+          完成率：<b>${doneRate}%</b><br>
+          分类命中（A列含服装/食品/药品）：<b>${categoryRows.length}</b> 条；不含分类：<b>${cleanRows.length}</b> 条
+        `);
+
+        const pendingPreview = pendingLocations.slice(0, 200);
+        pendingPanel.classList.toggle('hidden', !pendingPreview.length);
+        if (pendingPreview.length) {
+          renderTable(pendingTableWrap, ['文件', 'Sheet', '行号', '列名', '当前值', '处理人'], pendingPreview);
+        }
+
+        const categoryPreview = categoryRows.slice(0, 200);
+        categoryPanel.classList.toggle('hidden', !categoryPreview.length);
+        if (categoryPreview.length) {
+          renderTable(categoryTableWrap, ['文件', 'Sheet', '行号', 'A列值', '分类'], categoryPreview);
+        }
+
+        lastAnalysis = {
+          total,
+          doneRate,
+          doneRows,
+          pendingRows,
+          unknownRows,
+          pendingLocations,
+          ownerStats,
+          fileStats: Object.values(fileStats),
+          categoryRows,
+          cleanRows,
+          dedupeRemoved: dedupeResult.removedRows,
+          chosenCols: { status: statusCol.value, owner: ownerCol.value, a: colA.value, c: colC.value, d: colD.value },
+          doneKeywords,
+          pendingKeywords
+        };
+
+        [exportPendingBtn, exportSummaryBtn, exportCategoryBtn, exportCleanBtn].forEach((btn) => (btn.disabled = false));
+      }
+
+      function rowsWithMeta(rows) {
+        return rows.map((r) => {
+          const out = { 来源文件: r.__file, 来源Sheet: r.__sheet, 来源行号: r.__rowNum };
+          mergedHeaders.forEach((h) => { out[h] = r[h] ?? ''; });
+          return out;
+        });
+      }
+
+      fileInput.addEventListener('change', (e) => loadFiles(Array.from(e.target.files || [])));
       sheetMode.addEventListener('change', () => {
         const files = Array.from(fileInput.files || []);
         if (files.length) loadFiles(files);
       });
-
       analyzeBtn.addEventListener('click', analyzeData);
 
       exportPendingBtn.addEventListener('click', () => {
         if (!lastAnalysis) return;
-        const pendingRowsForExport = lastAnalysis.pendingRows.map((row) => ({
-          来源文件: row.__file,
-          来源Sheet: row.__sheet,
-          来源行号: row.__rowNum,
-          状态值: row[lastAnalysis.statusKey] ?? '',
-          处理人: lastAnalysis.ownerKey ? row[lastAnalysis.ownerKey] ?? '' : '',
-          ...Object.fromEntries(mergedHeaders.map((h) => [h, row[h] ?? '']))
-        }));
-
-        exportWorkbook(
-          [
-            {
-              name: '未完成定位',
-              rows: lastAnalysis.pendingLocations
-            },
-            {
-              name: '未完成完整数据',
-              rows: pendingRowsForExport
-            }
-          ],
-          '未完成清单_含定位.xlsx'
-        );
-      });
-
-      exportFullBtn.addEventListener('click', () => {
-        const { unifiedRows, headers } = toUnifiedRows(new Set(mergedHeaders), mergedRows);
-        exportWorkbook(
-          [
-            {
-              name: '完整总表_不筛选',
-              rows: unifiedRows,
-              headers: ['来源文件', '来源Sheet', '来源行号', ...headers]
-            }
-          ],
-          '完整总表_不筛选.xlsx'
-        );
+        exportWorkbook([
+          { sheetName: '未完成定位', rows: lastAnalysis.pendingLocations },
+          { sheetName: '未完成完整数据', rows: rowsWithMeta(lastAnalysis.pendingRows), headers: ['来源文件', '来源Sheet', '来源行号', ...mergedHeaders] }
+        ], '未完成清单_含定位.xlsx');
       });
 
       exportSummaryBtn.addEventListener('click', () => {
         if (!lastAnalysis) return;
+        const overview = [{
+          去重前总数: mergedRows.length,
+          去重后总数: lastAnalysis.total,
+          去重删除数: lastAnalysis.dedupeRemoved.length,
+          已完成: lastAnalysis.doneRows.length,
+          未完成: lastAnalysis.pendingRows.length,
+          未识别: lastAnalysis.unknownRows.length,
+          完成率: `${lastAnalysis.doneRate}%`,
+          分类命中: lastAnalysis.categoryRows.length,
+          非分类数据: lastAnalysis.cleanRows.length,
+          状态列: lastAnalysis.chosenCols.status,
+          A列: lastAnalysis.chosenCols.a,
+          C列: lastAnalysis.chosenCols.c,
+          D列: lastAnalysis.chosenCols.d,
+          已完成关键词: lastAnalysis.doneKeywords.join(', '),
+          未完成关键词: lastAnalysis.pendingKeywords.join(', ') || '（空）'
+        }];
 
-        const overview = [
-          {
-            文件数: new Set(mergedRows.map((r) => r.__file)).size,
-            总数据: lastAnalysis.total,
-            已完成: lastAnalysis.doneRows.length,
-            未完成: lastAnalysis.pendingRows.length,
-            未识别: lastAnalysis.unknownRows.length,
-            完成率: `${lastAnalysis.doneRate}%`,
-            状态列: lastAnalysis.statusKey,
-            处理人列: lastAnalysis.ownerKey || '（未使用）',
-            已完成关键词: lastAnalysis.doneKeywords.join(', '),
-            未完成关键词: lastAnalysis.pendingKeywords.join(', ') || '（空，默认非已完成都算未完成）'
-          }
-        ];
-
-        const ownerRows = Object.entries(lastAnalysis.ownerStats).map(([owner, stat]) => ({
-          处理人: owner,
-          总数: stat.total,
-          已完成: stat.done,
-          未完成: stat.pending,
-          完成率: stat.total ? `${((stat.done / stat.total) * 100).toFixed(2)}%` : '0%'
+        const ownerRows = Object.entries(lastAnalysis.ownerStats).map(([name, s]) => ({
+          处理人: name,
+          总数: s.total,
+          已完成: s.done,
+          未完成: s.pending,
+          完成率: s.total ? `${((s.done / s.total) * 100).toFixed(2)}%` : '0%'
         }));
 
-        exportWorkbook(
-          [
-            { name: '总览', rows: overview },
-            { name: '按文件分组', rows: lastAnalysis.fileStats },
-            { name: '按处理人', rows: ownerRows },
-            { name: '未完成定位', rows: lastAnalysis.pendingLocations }
-          ],
-          '多文件进度总报告.xlsx'
-        );
+        exportWorkbook([
+          { sheetName: '总览', rows: overview },
+          { sheetName: '按文件分组', rows: lastAnalysis.fileStats },
+          { sheetName: '按处理人', rows: ownerRows },
+          { sheetName: '去重删除明细', rows: lastAnalysis.dedupeRemoved },
+          { sheetName: '未完成定位', rows: lastAnalysis.pendingLocations }
+        ], '多文件进度总报告.xlsx');
+      });
+
+      exportCategoryBtn.addEventListener('click', () => {
+        if (!lastAnalysis) return;
+        const categoryOnlyRows = lastAnalysis.categoryRows.map((item) => {
+          const row = lastAnalysis.pendingRows.concat(lastAnalysis.doneRows, lastAnalysis.unknownRows)
+            .find((r) => r.__file === item.文件 && r.__sheet === item.Sheet && r.__rowNum === item.行号);
+          if (!row) return { ...item };
+          return {
+            ...item,
+            ...Object.fromEntries(mergedHeaders.map((h) => [h, row[h] ?? '']))
+          };
+        });
+
+        exportWorkbook([
+          { sheetName: '分类命中定位', rows: lastAnalysis.categoryRows },
+          { sheetName: '分类命中完整数据', rows: categoryOnlyRows }
+        ], '服装食品药品_分类命中.xlsx');
+      });
+
+      exportCleanBtn.addEventListener('click', async () => {
+        if (!lastAnalysis) return;
+        await exportCleanZipBySource(lastAnalysis.cleanRows, mergedHeaders);
       });
     </script>
   </body>
