@@ -107,8 +107,9 @@
           </div>
 
           <div>
-            <label for="statusCol">3) 状态列（进度判断）</label>
+            <label for="statusCol">3) 状态列（可选，进度判断）</label>
             <select id="statusCol" disabled></select>
+            <div class="tips">不选也可以，仅做去重 + 分类提取。</div>
           </div>
 
           <div>
@@ -146,7 +147,7 @@
         </div>
 
         <div class="actions">
-          <button id="analyzeBtn" disabled>开始汇总统计</button>
+          <button id="analyzeBtn" disabled>开始处理（去重+分类+可选进度）</button>
           <button id="exportPendingBtn" disabled>导出未完成清单</button>
           <button id="exportSummaryBtn" disabled>导出总报告</button>
           <button id="exportCategoryBtn" disabled>导出服装/食品/药品表</button>
@@ -407,7 +408,7 @@
         }
 
         mergedHeaders = Array.from(headersSet);
-        fillSelect(statusCol, mergedHeaders);
+        fillSelect(statusCol, mergedHeaders, true);
         fillSelect(ownerCol, mergedHeaders, true);
         fillSelect(colA, mergedHeaders);
         fillSelect(colC, mergedHeaders);
@@ -418,11 +419,12 @@
       }
 
       function analyzeData() {
-        if (!statusCol.value || !colA.value || !colC.value || !colD.value) {
-          setSummary('<span class="warn">请至少选择状态列、A列、C列、D列再分析。</span>');
+        if (!colA.value || !colC.value || !colD.value) {
+          setSummary('<span class="warn">请至少选择 A 列、C 列、D 列再分析。</span>');
           return;
         }
 
+        const statusKey = statusCol.value;
         const doneKeywords = parseKeywords(doneValuesInput.value);
         const pendingKeywords = parseKeywords(pendingValuesInput.value);
 
@@ -439,9 +441,9 @@
         const cleanRows = [];
 
         rows.forEach((row) => {
-          const statusText = normalize(row[statusCol.value]);
-          const isDone = doneKeywords.includes(statusText);
-          const isPending = pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone;
+          const statusText = statusKey ? normalize(row[statusKey]) : '';
+          const isDone = statusKey ? doneKeywords.includes(statusText) : false;
+          const isPending = statusKey ? (pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone) : false;
           const owner = ownerCol.value ? String(row[ownerCol.value] || '（未填写）').trim() || '（未填写）' : '（未分配）';
 
           const categoryInfo = detectCategory(row[colA.value]);
@@ -474,7 +476,7 @@
             pendingRows.push(row);
             ownerStats[owner].pending += 1;
             fileStats[fk].未完成 += 1;
-            pendingLocations.push({ 文件: row.__file, Sheet: row.__sheet, 行号: row.__rowNum, 列名: statusCol.value, 当前值: row[statusCol.value], 处理人: owner });
+            pendingLocations.push({ 文件: row.__file, Sheet: row.__sheet, 行号: row.__rowNum, 列名: statusKey, 当前值: row[statusKey], 处理人: owner });
           } else {
             unknownRows.push(row);
             fileStats[fk].未识别 += 1;
@@ -484,12 +486,16 @@
         const total = rows.length;
         const doneRate = total ? ((doneRows.length / total) * 100).toFixed(2) : '0.00';
 
+        const statusNotice = statusKey
+          ? ''
+          : '<br><span class="warn">未选择状态列：本次只执行了去重与分类提取，未执行已完成/未完成统计。</span>';
+
         setSummary(`
           去重前：<b>${mergedRows.length}</b> 条；去重后：<b>${total}</b> 条（删除 ${dedupeResult.removedRows.length} 条）<br>
           <span class="ok">已完成：${doneRows.length}</span> 条；<span class="warn">未完成：${pendingRows.length}</span> 条；未识别：${unknownRows.length} 条<br>
           完成率：<b>${doneRate}%</b><br>
           分类命中（A列含服装/食品/药品）：<b>${categoryRows.length}</b> 条；不含分类：<b>${cleanRows.length}</b> 条<br>
-          说明：分类支持中文关键词 + 俄语词干识别（会展示俄语拆词和命中词）。
+          说明：分类支持中文关键词 + 俄语词干识别（会展示俄语拆词和命中词）。${statusNotice}
         `);
 
         const pendingPreview = pendingLocations.slice(0, 200);
@@ -516,12 +522,13 @@
           categoryRows,
           cleanRows,
           dedupeRemoved: dedupeResult.removedRows,
-          chosenCols: { status: statusCol.value, owner: ownerCol.value, a: colA.value, c: colC.value, d: colD.value },
+          chosenCols: { status: statusKey, owner: ownerCol.value, a: colA.value, c: colC.value, d: colD.value },
           doneKeywords,
           pendingKeywords
         };
 
-        [exportPendingBtn, exportSummaryBtn, exportCategoryBtn, exportCleanBtn].forEach((btn) => (btn.disabled = false));
+        exportPendingBtn.disabled = !statusKey;
+        [exportSummaryBtn, exportCategoryBtn, exportCleanBtn].forEach((btn) => (btn.disabled = false));
       }
 
       function rowsWithMeta(rows) {

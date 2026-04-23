@@ -53,6 +53,7 @@ Put your images in `/public`. Avatar path is `/头像.jpg` (replace this file).
 - 去重规则：同 A 且 D 不同 → 保留 C 值更高；同 A 且 D 相同 → 保留首条
 - 分类提取：A 列命中“服装类 / 食品 / 药品类”会单独输出
 - 俄语识别：自动提取 A 列里的俄语词，并用俄语词干匹配服装/食品/药品类别
+- 即使不选状态列，也可单独执行“去重 + 分类提取”功能
 - 导出能力：
   - `未完成清单_含定位.xlsx`
   - `多文件进度总报告.xlsx`（含总览、去重删除明细、未完成定位等）
@@ -63,7 +64,7 @@ Put your images in `/public`. Avatar path is `/头像.jpg` (replace this file).
 1. 双击打开 `tools/xlsx_progress_manager.html`
 2. 选择多个 Excel 文件（.xlsx）
 3. 选择读取方式（第一个 Sheet / 所有 Sheet）
-4. 选择状态列、A列、C列、D列（处理人列可选）
+4. 选择 A列、C列、D列（状态列可选，处理人列可选）
 5. 设置已完成/未完成关键词
 6. 点击“开始汇总统计”
 7. 按需导出对应结果文件
