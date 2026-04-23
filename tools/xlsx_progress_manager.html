@@ -119,7 +119,7 @@
           <div>
             <label for="colA">5) A列（去重+分类识别）</label>
             <select id="colA" disabled></select>
-            <div class="tips">用于识别“服装类/食品/药品类”。</div>
+            <div class="tips">用于识别“服装类/食品/药品类”，支持俄语产品名拆词识别。</div>
           </div>
 
           <div>
@@ -161,9 +161,21 @@
 
     <script>
       const CATEGORY_RULES = [
-        { key: '服装类', words: ['服装类', '服装'] },
-        { key: '食品', words: ['食品', '食物'] },
-        { key: '药品类', words: ['药品类', '药品', '药'] }
+        {
+          key: '服装类',
+          words: ['服装类', '服装'],
+          ruStems: ['одежд', 'куртк', 'футболк', 'плать', 'брюк', 'юбк', 'обув', 'носк', 'перчатк', 'шапк', 'костюм', 'джинс']
+        },
+        {
+          key: '食品',
+          words: ['食品', '食物'],
+          ruStems: ['продукт', 'ед', 'напит', 'хлеб', 'молок', 'мяс', 'рыб', 'чай', 'кофе', 'сахар', 'шоколад', 'конфет', 'печень', 'масл']
+        },
+        {
+          key: '药品类',
+          words: ['药品类', '药品', '药'],
+          ruStems: ['лекарств', 'препарат', 'таблет', 'капсул', 'сироп', 'маз', 'витамин', 'антибиот', 'инсулин', 'аптек', 'раствор']
+        }
       ];
 
       const fileInput = document.getElementById('fileInput');
@@ -285,10 +297,32 @@
         return { keptRows, removedRows };
       }
 
+      function extractRussianTokens(text) {
+        const tokens = String(text ?? '').toLowerCase().match(/[а-яё]+/gi) || [];
+        return Array.from(new Set(tokens));
+      }
+
       function detectCategory(text) {
         const value = String(text ?? '').trim();
-        const hits = CATEGORY_RULES.filter((r) => r.words.some((w) => value.includes(w))).map((r) => r.key);
-        return Array.from(new Set(hits));
+        const valueLower = value.toLowerCase();
+        const ruTokens = extractRussianTokens(valueLower);
+        const hits = [];
+        const matchedRuWords = [];
+
+        CATEGORY_RULES.forEach((rule) => {
+          const hitCn = rule.words.some((w) => value.includes(w));
+          const ruMatched = ruTokens.filter((token) => rule.ruStems.some((stem) => token.includes(stem)));
+          if (hitCn || ruMatched.length) {
+            hits.push(rule.key);
+            matchedRuWords.push(...ruMatched);
+          }
+        });
+
+        return {
+          categories: Array.from(new Set(hits)),
+          ruTokens,
+          matchedRuWords: Array.from(new Set(matchedRuWords))
+        };
       }
 
       function renderTable(container, columns, rows) {
@@ -410,14 +444,16 @@
           const isPending = pendingKeywords.length ? pendingKeywords.includes(statusText) : !isDone;
           const owner = ownerCol.value ? String(row[ownerCol.value] || '（未填写）').trim() || '（未填写）' : '（未分配）';
 
-          const cats = detectCategory(row[colA.value]);
-          if (cats.length) {
+          const categoryInfo = detectCategory(row[colA.value]);
+          if (categoryInfo.categories.length) {
             categoryRows.push({
               文件: row.__file,
               Sheet: row.__sheet,
               行号: row.__rowNum,
               A列值: row[colA.value],
-              分类: cats.join('、')
+              分类: categoryInfo.categories.join('、'),
+              俄语词拆分: categoryInfo.ruTokens.join(' | '),
+              命中俄语词: categoryInfo.matchedRuWords.join(' | ')
             });
           } else {
             cleanRows.push(row);
@@ -452,7 +488,8 @@
           去重前：<b>${mergedRows.length}</b> 条；去重后：<b>${total}</b> 条（删除 ${dedupeResult.removedRows.length} 条）<br>
           <span class="ok">已完成：${doneRows.length}</span> 条；<span class="warn">未完成：${pendingRows.length}</span> 条；未识别：${unknownRows.length} 条<br>
           完成率：<b>${doneRate}%</b><br>
-          分类命中（A列含服装/食品/药品）：<b>${categoryRows.length}</b> 条；不含分类：<b>${cleanRows.length}</b> 条
+          分类命中（A列含服装/食品/药品）：<b>${categoryRows.length}</b> 条；不含分类：<b>${cleanRows.length}</b> 条<br>
+          说明：分类支持中文关键词 + 俄语词干识别（会展示俄语拆词和命中词）。
         `);
 
         const pendingPreview = pendingLocations.slice(0, 200);
@@ -464,7 +501,7 @@
         const categoryPreview = categoryRows.slice(0, 200);
         categoryPanel.classList.toggle('hidden', !categoryPreview.length);
         if (categoryPreview.length) {
-          renderTable(categoryTableWrap, ['文件', 'Sheet', '行号', 'A列值', '分类'], categoryPreview);
+          renderTable(categoryTableWrap, ['文件', 'Sheet', '行号', 'A列值', '分类', '俄语词拆分', '命中俄语词'], categoryPreview);
         }
 
         lastAnalysis = {
